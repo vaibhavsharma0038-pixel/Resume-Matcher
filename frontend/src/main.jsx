@@ -121,6 +121,7 @@ function App() {
       {/* Ambient background glow */}
       <div className="ambient-glow glow-1" />
       <div className="ambient-glow glow-2" />
+      <div className="ambient-glow glow-3" />
 
       {/* Header */}
       <header className="top-nav">
@@ -139,7 +140,7 @@ function App() {
             </div>
             <div className="brand-text">
               <div className="brand-title">
-                <span className="brand-badge">C9</span> CareerFit
+                Career<span className="gradient-text">Fit</span>
               </div>
               <span className="brand-subtitle">AI RESUME INTELLIGENCE</span>
             </div>
@@ -529,7 +530,7 @@ function App() {
         {/* Footer */}
         <footer className="footer">
           <div className="footer-left">
-            <span className="footer-brand">C9 CAREERFIT</span>
+            <span className="footer-brand">CAREERFIT</span>
             <span>· Placement Resume Intelligence</span>
           </div>
           <div className="footer-right">
