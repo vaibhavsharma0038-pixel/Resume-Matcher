@@ -1,4 +1,4 @@
-# C9 CareerFit — Groq Edition
+# CareerFit — AI Resume Matcher
 
 A placement-focused resume review app. Upload a text-based PDF resume, paste a job description, and receive a match score with reasons, skill gaps, rewritten bullets, strengths, and next steps.
 
@@ -15,12 +15,11 @@ py -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
-Create `backend/.env` with your API key:
-```
+Create `backend/.env` with your API key (keep `.env` out of GitHub):
+```env
 GROQ_API_KEY=your_key_here
 GROQ_MODEL=openai/gpt-oss-120b
 ```
-Create `backend/.env` and set `GROQ_API_KEY` to your private key. Keep `.env` out of GitHub.
 
 Start backend:
 ```powershell
@@ -44,3 +43,4 @@ Default is `openai/gpt-oss-120b` on Groq. If you wish to use another model, choo
 - The app does not save resumes or analysis results to a database.
 - API usage is subject to the Groq API plan, model availability, quotas, and rate limits.
 - The match score is advisory, not an ATS score or hiring decision.
+

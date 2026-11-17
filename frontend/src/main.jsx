@@ -34,7 +34,7 @@ function App() {
   const [drag, setDrag] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('c9_theme');
+    const saved = localStorage.getItem('careerfit_theme') || localStorage.getItem('c9_theme');
     if (saved) return saved;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
@@ -43,7 +43,7 @@ function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('c9_theme', theme);
+    localStorage.setItem('careerfit_theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {

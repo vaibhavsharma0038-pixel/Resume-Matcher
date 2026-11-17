@@ -14,7 +14,7 @@ from pypdf import PdfReader
 # Load .env from this file's directory, independent of the terminal's working directory.
 load_dotenv(Path(__file__).with_name('.env'))
 
-app = FastAPI(title='C9 Resume Matcher', version='2.0.0')
+app = FastAPI(title='CareerFit Resume Matcher', version='2.0.0')
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['http://localhost:5173'],
@@ -53,7 +53,7 @@ class Analysis(BaseModel):
 
 RESPONSE_SCHEMA = json.dumps(Analysis.model_json_schema(), indent=2)
 
-SYSTEM_PROMPT = f'''You are C9, an experienced university placement resume reviewer and career coach.
+SYSTEM_PROMPT = f'''You are CareerFit, an experienced university placement resume reviewer and career coach.
 ROLE PROMPTING: Act as a careful placement-cell resume reviewer. Be supportive, specific, practical, and honest.
 
 SCORING RUBRIC (maximum 100 points):
