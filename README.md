@@ -14,9 +14,13 @@ cd backend
 py -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-Copy-Item .env.example .env
 ```
-Edit `backend/.env` and set `GROQ_API_KEY` to your private key. Keep `.env` out of GitHub.
+Create `backend/.env` with your API key:
+```
+GROQ_API_KEY=your_key_here
+GROQ_MODEL=openai/gpt-oss-120b
+```
+Create `backend/.env` and set `GROQ_API_KEY` to your private key. Keep `.env` out of GitHub.
 
 Start backend:
 ```powershell
@@ -33,7 +37,7 @@ npm run dev
 Open the Vite URL, normally `http://localhost:5173`.
 
 ## Model
-Default is `llama-3.3-70b-versatile` on Groq. If you wish to use another model, choose a currently available model on [Groq Console](https://console.groq.com) and set `GROQ_MODEL` in `.env` accordingly.
+Default is `openai/gpt-oss-120b` on Groq. If you wish to use another model, choose a currently available model on [Groq Console](https://console.groq.com) and set `GROQ_MODEL` in `.env` accordingly.
 
 ## Notes
 - Text-based PDFs only; scanned PDFs require OCR.

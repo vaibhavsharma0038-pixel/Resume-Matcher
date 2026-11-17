@@ -81,7 +81,7 @@ def health():
     return {
         'status': 'ok',
         'api_key_configured': bool(os.getenv('GROQ_API_KEY')),
-        'model': os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+        'model': os.getenv('GROQ_MODEL', 'openai/gpt-oss-120b'),
     }
 
 @app.post('/api/analyze', response_model=Analysis)
@@ -121,7 +121,7 @@ Keep every recommendation grounded in the supplied resume. Do not invent qualifi
     try:
         client = Groq(api_key=api_key)
         response = client.chat.completions.create(
-            model=os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+            model=os.getenv('GROQ_MODEL', 'openai/gpt-oss-120b'),
             messages=[
                 {'role': 'system', 'content': SYSTEM_PROMPT},
                 {'role': 'user', 'content': user_prompt},
