@@ -1,6 +1,7 @@
 import io
 import json
 import os
+import time
 from pathlib import Path
 from typing import Literal
 
@@ -114,26 +115,42 @@ JOB DESCRIPTION:
 
 Keep every recommendation grounded in the supplied resume. Do not invent qualifications.'''
 
-    try:
-        client = genai.Client(api_key=api_key)
-        response = client.models.generate_content(
-            model=os.getenv('GEMINI_MODEL', 'gemini-3.8-flash'),
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                response_mime_type='application/json',
-                response_schema=Analysis,
-                temperature=0.2,
-            ),
-        )
-        if not response.text:
-            raise ValueError('Gemini returned an empty response. Try again or check the selected model.')
-        result = json.loads(response.text)
-        awarded = sum(item.get('points', 0) for item in result.get('score_reasons', []))
-        if awarded != result.get('match_score'):
-            raise ValueError('The score breakdown did not add up. Please try again.')
-        return Analysis.model_validate(result)
-    except Exception as exc:
-        # Keep the detail visible in the backend terminal and return a useful API error.
-        print(f'Gemini analysis error: {type(exc).__name__}: {exc}')
-        raise HTTPException(status_code=502, detail=f'Gemini analysis failed: {type(exc).__name__}: {exc}')
+    MAX_RETRIES = 3
+    BACKOFF_SECONDS = [2, 5, 10]  # Wait before each retry.
+    RETRYABLE_CODES = {429, 500, 502, 503}
+
+    client = genai.Client(api_key=api_key)
+    last_exc: Exception | None = None
+
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            response = client.models.generate_content(
+                model=os.getenv('GEMINI_MODEL', 'gemini-3.8-flash'),
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_PROMPT,
+                    response_mime_type='application/json',
+                    response_schema=Analysis,
+                    temperature=0.2,
+                ),
+            )
+            if not response.text:
+                raise ValueError('Gemini returned an empty response. Try again or check the selected model.')
+            result = json.loads(response.text)
+            awarded = sum(item.get('points', 0) for item in result.get('score_reasons', []))
+            if awarded != result.get('match_score'):
+                raise ValueError('The score breakdown did not add up. Please try again.')
+            return Analysis.model_validate(result)
+        except Exception as exc:
+            last_exc = exc
+            # Retry only on transient server/rate-limit errors.
+            status = getattr(exc, 'code', None) or getattr(exc, 'status_code', None)
+            if status in RETRYABLE_CODES and attempt < MAX_RETRIES:
+                wait = BACKOFF_SECONDS[attempt - 1]
+                print(f'Gemini attempt {attempt}/{MAX_RETRIES} failed ({status}). Retrying in {wait}s...')
+                time.sleep(wait)
+                continue
+            break
+
+    print(f'Gemini analysis error: {type(last_exc).__name__}: {last_exc}')
+    raise HTTPException(status_code=502, detail=f'Gemini analysis failed: {type(last_exc).__name__}: {last_exc}')
