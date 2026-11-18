@@ -28,7 +28,6 @@ const RESULT_TABS = [
   { id: 'skills', label: 'Skills & Gaps' },
   { id: 'education', label: 'Education & Experience' },
   { id: 'rewrites', label: 'Resume Review' },
-  { id: 'interview', label: 'Interview Prep' },
   { id: 'action-plan', label: 'Action Plan' },
 ];
 
@@ -43,6 +42,7 @@ function App() {
   const [error, setError] = useState('');
   const [drag, setDrag] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
   const [analysisHistory, setAnalysisHistory] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('careerfit_history') || '[]');
@@ -167,12 +167,22 @@ function App() {
     setJobTitle(entry.job_title || '');
     setCompany(entry.company || '');
     setResult(entry.analysis);
+    setShowHistory(false);
     setActiveResultTab('overview');
     setTimeout(() => {
       if (resultsRef.current) {
         resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 100);
+  };
+
+  const clearAnalysisHistory = () => {
+    setAnalysisHistory([]);
+    localStorage.removeItem('careerfit_history');
+  };
+
+  const openHistory = () => {
+    setShowHistory(value => !value);
   };
 
   const getScoreColor = (score) => {
@@ -226,6 +236,18 @@ function App() {
 
             <button
               type="button"
+              className="history-header-btn"
+              onClick={openHistory}
+              aria-label={`Open analysis history (${analysisHistory.length} saved)`}
+              title="Analysis history"
+            >
+              <RefreshCw size={15} />
+              <span>History</span>
+              {analysisHistory.length > 0 && <b>{analysisHistory.length}</b>}
+            </button>
+
+            <button
+              type="button"
               className="theme-toggle"
               onClick={toggleTheme}
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
@@ -236,6 +258,55 @@ function App() {
           </div>
         </div>
       </header>
+
+      {showHistory && (
+        <div className="history-overlay" role="dialog" aria-modal="true" aria-label="Analysis history">
+          <button
+            type="button"
+            className="history-backdrop"
+            aria-label="Close history"
+            onClick={() => setShowHistory(false)}
+          />
+          <aside className="history-drawer">
+            <div className="history-drawer-header">
+              <div>
+                <span className="step-tag">SAVED LOCALLY</span>
+                <h2>Analysis History</h2>
+              </div>
+              <button type="button" className="history-close" onClick={() => setShowHistory(false)} aria-label="Close history">
+                <X size={18} />
+              </button>
+            </div>
+            {analysisHistory.length > 0 ? (
+              <div className="history-drawer-list">
+                {analysisHistory.map(entry => (
+                  <button
+                    type="button"
+                    className="history-drawer-item"
+                    key={entry.id}
+                    onClick={() => restoreHistoryEntry(entry)}
+                  >
+                    <span className="history-drawer-main">
+                      <strong>{entry.job_title || 'Untitled role'}{entry.company ? ` · ${entry.company}` : ''}</strong>
+                      <small>{entry.resume_name}</small>
+                      <small>{new Date(entry.created_at).toLocaleString()}</small>
+                    </span>
+                    <b>{entry.analysis.match_score}/100</b>
+                    <ArrowRight size={16} />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="history-empty">No saved analyses yet.</p>
+            )}
+            {analysisHistory.length > 0 && (
+              <button type="button" className="btn-secondary history-clear" onClick={clearAnalysisHistory}>
+                Clear history
+              </button>
+            )}
+          </aside>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="main-content">
@@ -429,31 +500,6 @@ function App() {
                 </button>
               </div>
             </div>
-
-            {analysisHistory.length > 0 && (
-              <details className="history-panel">
-                <summary>
-                  <span>Analysis history</span>
-                  <span className="history-count">{analysisHistory.length}</span>
-                </summary>
-                <div className="history-list">
-                  {analysisHistory.map(entry => (
-                    <button
-                      type="button"
-                      className="history-item"
-                      key={entry.id}
-                      onClick={() => restoreHistoryEntry(entry)}
-                    >
-                      <span>
-                        <strong>{entry.job_title || 'Untitled role'}{entry.company ? ` · ${entry.company}` : ''}</strong>
-                        <small>{entry.resume_name} · {new Date(entry.created_at).toLocaleString()}</small>
-                      </span>
-                      <b>{entry.analysis.match_score}/100</b>
-                    </button>
-                  ))}
-                </div>
-              </details>
-            )}
 
             <nav className="results-tabs" aria-label="Evaluation result sections">
               {RESULT_TABS.map((tab, index) => (
@@ -733,31 +779,6 @@ function App() {
                 </>
               )}
 
-              {/* Interview Preparation */}
-              {activeResultTab === 'interview' && (
-                <div className="panel-box">
-                  <h3 className="panel-title highlight">
-                    <Target size={18} className="panel-icon" />
-                    <span>Likely Interview Questions</span>
-                  </h3>
-                  <p className="panel-subtitle">
-                    Questions are based on demonstrated strengths and the role's evidence gaps.
-                  </p>
-                  <div className="interview-list">
-                    {result.interview_questions.map((item, i) => (
-                      <div className="interview-card" key={i}>
-                        <div className="interview-number">0{i + 1}</div>
-                        <div className="interview-content">
-                          <h4>{item.question}</h4>
-                          <p><strong>Why it may be asked:</strong> {item.why_it_may_be_asked}</p>
-                          <p><strong>Answer focus:</strong> {item.answer_focus}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Next Steps Roadmap */}
               {activeResultTab === 'action-plan' && (
                 <div className="panel-box roadmap-panel">
@@ -811,6 +832,7 @@ function App() {
                   </div>
                 </div>
               )}
+
             </div>
 
             {/* Developer JSON Output Accordion */}
